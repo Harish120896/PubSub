@@ -27,7 +27,16 @@ type serverMsg struct{
 	message string
 }
 
-func (p * pubSubServer) start() error {
+func (p pubSubServer) newRW()(*bufio.ReadWriter,error){
+	conn,err := net.Dial("tcp","localhost"+PORT)
+	if err != nil{
+		return nil,err
+	}
+	rw := bufio.NewReadWriter(bufio.NewReader(conn),bufio.NewWriter(conn))
+	return rw, nil
+}
+
+func (p  pubSubServer) start() error {
 	listen,err := net.Listen("tcp",PORT)
 	if err != nil {
 		return err
