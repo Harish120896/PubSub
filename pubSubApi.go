@@ -1,6 +1,8 @@
 package PubSub
 
-import "bufio"
+import (
+	"bufio"
+)
 
 type pubSubApi interface {
 	NewPublisher() publisherApi
@@ -21,14 +23,53 @@ func pubSubServerStart() (pubSubApi,error){
 	return pubsubobj, nil
 }
 
-func pubsubApi(){
+func pubsubApi() (pubSubApi,error){
+	InitChannels()
+	pubsubObj := pubSubFactory{server:pubSubServer{}}
+	rw,err := pubsubObj.server.newRW()
+	if err != nil {
+		return nil,err
+	}
+	sendMessage(rw,serverMsg{
+		class:addClientMessage,
+	})
+	go listen(rw)
+	go broadcast()
+	return pubsubObj,nil
+}
 
+func listen(rw *bufio.ReadWriter){
+	message,err := receiveMessage(rw)
+	if err != nil{
+		return
+	}
+	channelMap[message.class]  <- message
+}
+
+func broadcast(){
+	for {
+		message := <-channelMap[publisherPublishedMessage]
+		broadcastMsg(message)
+	}
+}
+
+func broadcastMsg(msg serverMsg){
+	subs,ok := subscriptionMap[msg.topic]
+	if ok {
+		for sub,flag := range subs{
+			if flag {
+				sub.callbackMap[msg.topic](msg.message)
+			}
+		}
+	}
 }
 
 func (p  pubSubFactory) NewPublisher() publisherApi{
-	return nil
+	publisherObj,_:= newPublisher(p.rw)
+	return publisherObj
 }
 
 func (p  pubSubFactory) NewSubscriber() subscriberApi{
-	return nil
+	subscriberObj, _ := newSubscriber(p.rw)
+	return subscriberObj
 }

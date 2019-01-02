@@ -14,7 +14,7 @@ var (
 	channelMap map[string]chan serverMsg = make(map[string]chan serverMsg)
 )
 
-func initChannels(){
+func InitChannels(){
 	channelMap[publisherAddedMessage]chan = make(chan serverMsg,chaLen)
 	channelMap[publisherPublishedMessage]chan = make(chan serverMsg, chaLen)
 	channelMap[subscriberAddedMessage]chan = make(chan serverMsg, chaLen)

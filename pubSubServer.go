@@ -86,6 +86,22 @@ func handleReceivedMessages(message serverMsg,rw *bufio.ReadWriter){
 	switch message.class {
 	case addClientMessage:
 		streams = append(streams, rw)
+	case publisherAddedMessage:
+		message.id = publisherId
+		publisherId++
+		sendMessage(rw,message)
+	case publisherPublishedMessage:
+		for _,stream := range streams{
+			sendMessage(stream,message)
+		}
+	case subscriberAddedMessage:
+		message.id = subscriberId
+		subscriberId++
+		sendMessage(rw,message)
+	case subscriberSubscribedMessage:
+		return
+	case subscriberUnSubscribedMesssage:
+		return
 	default:
 		fmt.Println("unhandled case has been encountered")
 	}
